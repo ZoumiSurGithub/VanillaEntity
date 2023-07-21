@@ -1,0 +1,5 @@
+name: VanillaEntity
+version: BETA
+api: 5.0.0
+author: Zoumi
+main: Zoumi\VanillaEntity\VanillaEntity
