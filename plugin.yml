@@ -1,5 +1,5 @@
 name: VanillaEntity
-version: BETA
+version: 0.0.1-beta
 api: 5.0.0
 author: Zoumi
 main: Zoumi\VanillaEntity\VanillaEntity
