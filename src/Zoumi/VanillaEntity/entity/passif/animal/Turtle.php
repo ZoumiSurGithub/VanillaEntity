@@ -12,12 +12,14 @@ use Zoumi\VanillaEntity\entity\type\PassiveEntity;
 class Turtle extends PassiveEntity
 {
 
+
     public function __construct(Location $location, ?CompoundTag $nbt = null, bool $is_baby = false)
     {
         parent::__construct($location, $nbt, $is_baby);
         $this->setSpeed(0.5);
         $this->setDistracted(false); //NOT IMPLEMENTED YET
         $this->setMaxHealth(30);
+        $this->setSeaAnimal(true);
     }
 
     protected function getInitialSizeInfo(): EntitySizeInfo
@@ -53,6 +55,11 @@ class Turtle extends PassiveEntity
     public function canBeMounted(): bool
     {
         return false;
+    }
+
+    public function canBreathe(): bool
+    {
+        return true;
     }
 
 }

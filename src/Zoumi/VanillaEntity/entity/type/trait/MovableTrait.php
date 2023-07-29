@@ -115,6 +115,9 @@ trait MovableTrait
         return $this->distracted;
     }
 
+    /**
+     * @return bool|null
+     */
     public function moveY(): null|bool
     {
         $direction = $this->getDirectionVector();
@@ -152,15 +155,28 @@ trait MovableTrait
             return false;
         }
         $block = $this->getWorld()->getBlock($position);
-        /** VERIFICATION DU BLOC EN FACE DE L'ENTITÉ */
-        if ($block->isSolid() || $this->isCollidedHorizontally || $this->isUnderwater()) {
-            /** VERIFICATION DE SI IL Y A UN BLOC AU DESSUS DU BLOC EN FACE */
-            $block2 = $block->getPosition()->getWorld()->getBlock($block->getPosition()->add(0, 1, 0));
-            if ($block2->isSolid()) {
-                return false; // IL PEUT PAS
+        if ($this->isSeaAnimal()) {
+            /** VERIFICATION DU BLOC EN FACE DE L'ENTITÉ */
+            if ($block->isSolid() || $this->isCollidedHorizontally && !$block instanceof Water) {
+                /** VERIFICATION DE SI IL Y A UN BLOC AU DESSUS DU BLOC EN FACE */
+                $block2 = $block->getPosition()->getWorld()->getBlock($block->getPosition()->add(0, 1, 0));
+                if ($block2->isSolid() && !$block2 instanceof Water) {
+                    return false; // IL PEUT PAS
+                }
+            } elseif ($block instanceof Fire || $block instanceof Cobweb) {
+                return false;
             }
-        } elseif ($block instanceof Fire || $block instanceof Cobweb) {
-            return false;
+        } else {
+            /** VERIFICATION DU BLOC EN FACE DE L'ENTITÉ */
+            if ($block->isSolid() || $this->isCollidedHorizontally || $this->isUnderwater()) {
+                /** VERIFICATION DE SI IL Y A UN BLOC AU DESSUS DU BLOC EN FACE */
+                $block2 = $block->getPosition()->getWorld()->getBlock($block->getPosition()->add(0, 1, 0));
+                if ($block2->isSolid()) {
+                    return false; // IL PEUT PAS
+                }
+            } elseif ($block instanceof Fire || $block instanceof Cobweb) {
+                return false;
+            }
         }
         return true;
     }

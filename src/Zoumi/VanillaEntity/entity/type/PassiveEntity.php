@@ -21,6 +21,7 @@ use Zoumi\VanillaEntity\entity\passif\animal\Cow;
 use Zoumi\VanillaEntity\entity\type\trait\LoveTrait;
 use Zoumi\VanillaEntity\entity\type\trait\MovableTrait;
 use Zoumi\VanillaEntity\entity\type\trait\RidingTrait;
+use Zoumi\VanillaEntity\entity\type\trait\SeaAnimalTrait;
 use Zoumi\VanillaEntity\entity\type\trait\UtilsTrait;
 
 abstract class PassiveEntity extends Living implements Ageable
@@ -29,6 +30,7 @@ abstract class PassiveEntity extends Living implements Ageable
     use LoveTrait;
     use UtilsTrait;
     use RidingTrait;
+    use SeaAnimalTrait;
 
     public int $tick = 20; // FOR CALL whenSecondLeft()
     public bool $is_baby = false;
@@ -82,6 +84,10 @@ abstract class PassiveEntity extends Living implements Ageable
         parent::initEntity($nbt);
     }
 
+    /**
+     * @param EntityDamageEvent $source
+     * @return void
+     */
     public function attack(EntityDamageEvent $source): void
     {
         parent::attack($source);
@@ -113,6 +119,10 @@ abstract class PassiveEntity extends Living implements Ageable
     {
         if ($this->isClosed()) {
             return false;
+        }
+        if ($this->isSeaAnimal()) {
+            $inWater = $this->isUnderwater();
+            $this->setHasGravity(!$inWater);
         }
         if ($this->isBaby()) {
             if (++$this->tickToAdult >= 0) {
@@ -157,6 +167,15 @@ abstract class PassiveEntity extends Living implements Ageable
                         if ($d > 4) {
                             $this->motion->x = $this->getSpeed() * 0.15 * ($x / $diff);
                             $this->motion->z = $this->getSpeed() * 0.15 * ($z / $diff);
+                            if (!$this->isSeaAnimal()) {
+                                $this->moveY();
+                            } else {
+                                if ($this->isUnderwater()) {
+                                    $this->motion->y = $this->getSpeed() * 0.15 * ($y / $diff);
+                                } else {
+                                    $this->moveY();
+                                }
+                            }
                             $this->getWorld()->onEntityMoved($this);
                         } else {
                             $targetLove = $this->getTargetLove();
@@ -208,7 +227,15 @@ abstract class PassiveEntity extends Living implements Ageable
                             if ($d > 5) {
                                 $this->motion->x = $this->getSpeed() * 0.15 * ($x / $diff);
                                 $this->motion->z = $this->getSpeed() * 0.15 * ($z / $diff);
-                                $this->moveY();
+                                if (!$this->isSeaAnimal()) {
+                                    $this->moveY();
+                                } else {
+                                    if ($this->isUnderwater()) {
+                                        $this->motion->y = $this->getSpeed() * 0.15 * ($y / $diff);
+                                    } else {
+                                        $this->moveY();
+                                    }
+                                }
                                 $this->getWorld()->onEntityMoved($this);
                             }
                         } else {
@@ -226,6 +253,7 @@ abstract class PassiveEntity extends Living implements Ageable
                 } else {
                     if ($this->canContinue()) {
                         $x = intval($this->getDestination()->getX() - $this->getPosition()->getX());
+                        $y = intval($this->getDestination()->getY() - $this->getPosition()->getY());
                         $z = intval($this->getDestination()->getZ() - $this->getPosition()->getZ());
                         $diff = abs($x) + abs($z);
                         $d = $x ** 2 + $z ** 2;
@@ -234,8 +262,18 @@ abstract class PassiveEntity extends Living implements Ageable
                             $this->motion->z = $this->getSpeed() * 0.15 * ($z / $diff);
                             $yaw = atan2(-$x, $z) * 180 / M_PI;
                             $this->setRotation($yaw, 0);
-                            if (!$this->moveY()) {
-                                $this->setDestination(null);
+                            if (!$this->isSeaAnimal()) {
+                                if (!$this->moveY()) {
+                                    $this->setDestination(null);
+                                }
+                            } else {
+                                if ($this->isUnderwater()) {
+                                    $this->motion->y = $this->getSpeed() * 0.15 * ($y / $diff);
+                                } else {
+                                    if (!$this->moveY()) {
+                                        $this->setDestination(null);
+                                    }
+                                }
                             }
                             $this->getWorld()->onEntityMoved($this);
                         } else {
